@@ -45,10 +45,9 @@ const (
 	argoCDValuesPath       = "apps/values.yaml"
 	argoCDValuesEnvPathFmt = "apps/values-%s.yaml"
 
-	// requeueInterval re-checks taskapp-argocd on a fixed cadence, since git
-	// state can drift (hand edits, partially-failed reconciles) with no
-	// Kubernetes watch event to notify us.
-	requeueInterval = 5 * time.Minute
+	// DefaultRequeueInterval is used when the reconciler is constructed with
+	// a zero RequeueInterval.
+	DefaultRequeueInterval = 5 * time.Minute
 )
 
 // ApplicationRepositoryReconciler reconciles a ApplicationRepository object
@@ -59,6 +58,19 @@ type ApplicationRepositoryReconciler struct {
 	// GitHub is the write path into the taskapp-argocd repo. Scoped to a
 	// single owner/repo/branch at construction (see githubapi.RESTClient).
 	GitHub githubapi.Client
+
+	// RequeueInterval re-checks taskapp-argocd on a fixed cadence, since git
+	// state can drift (hand edits, partially-failed reconciles) with no
+	// Kubernetes watch event to notify us. Zero value falls back to
+	// DefaultRequeueInterval.
+	RequeueInterval time.Duration
+}
+
+func (r *ApplicationRepositoryReconciler) requeueInterval() time.Duration {
+	if r.RequeueInterval <= 0 {
+		return DefaultRequeueInterval
+	}
+	return r.RequeueInterval
 }
 
 // +kubebuilder:rbac:groups=platform.taskapp.io,resources=applicationrepositories,verbs=get;list;watch;create;update;patch;delete
@@ -108,7 +120,7 @@ func (r *ApplicationRepositoryReconciler) Reconcile(ctx context.Context, req ctr
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{RequeueAfter: requeueInterval}, nil
+	return ctrl.Result{RequeueAfter: r.requeueInterval()}, nil
 }
 
 // reconcileSpec patches this repository's shared, per-repo fields (the same

@@ -37,6 +37,11 @@ github:
   repoOwner: ""
   repoName: ""
   repoBranch: ""
+reconcile:
+  # requeueInterval overrides how often the operator re-checks taskapp-argocd
+  # for drift (Go duration string, e.g. "30s", "5m"). Leave empty to use the
+  # operator's built-in default (5m).
+  requeueInterval: ""
 kubernetesClusterDomain: cluster.local
 metricsService:
   ports:

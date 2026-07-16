@@ -45,6 +45,10 @@ spec:
         - name: ARGOCD_REPO_BRANCH
           value: {{ quote .Values.github.repoBranch }}
         {{- end }}
+        {{- if .Values.reconcile.requeueInterval }}
+        - name: REQUEUE_INTERVAL
+          value: {{ quote .Values.reconcile.requeueInterval }}
+        {{- end }}
         image: {{ .Values.controllerManager.manager.image.repository }}:{{ .Values.controllerManager.manager.image.tag
           | default .Chart.AppVersion }}
         livenessProbe:

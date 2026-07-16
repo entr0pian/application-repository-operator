@@ -21,6 +21,7 @@ import (
 	"errors"
 	"flag"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
@@ -204,6 +205,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	requeueInterval := controller.DefaultRequeueInterval
+	if v := os.Getenv("REQUEUE_INTERVAL"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			setupLog.Error(err, "invalid REQUEUE_INTERVAL", "value", v)
+			os.Exit(1)
+		}
+		requeueInterval = d
+	}
+
 	if err := (&controller.ApplicationRepositoryReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -213,6 +224,7 @@ func main() {
 			Branch: getenvDefault("ARGOCD_REPO_BRANCH", defaultArgoCDRepoBranch),
 			Token:  githubToken,
 		},
+		RequeueInterval: requeueInterval,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "applicationrepository")
 		os.Exit(1)
