@@ -1,7 +1,12 @@
 // Package yamlpatch mutates specific nested keys in a YAML document while
-// preserving everything else — comments, key order, and unrelated sibling
-// content. It has no I/O; callers are responsible for fetching and writing
-// back the raw bytes.
+// preserving comments, key order, and unrelated sibling content. Blank
+// lines between entries are NOT preserved — the whole document is
+// re-encoded from its parsed node tree on every write, and yaml.v3's node
+// model has no representation for a bare blank line, so any file with
+// blank-line formatting gets flattened to dense style the first time it's
+// written (subsequent writes are then no-ops for formatting, since there's
+// nothing left to flatten). It has no I/O; callers are responsible for
+// fetching and writing back the raw bytes.
 package yamlpatch
 
 import (
