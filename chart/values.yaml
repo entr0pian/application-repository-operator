@@ -1,0 +1,52 @@
+controllerManager:
+  manager:
+    args:
+    - --metrics-bind-address=:8443
+    - --leader-elect
+    - --health-probe-bind-address=:8081
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
+      readOnlyRootFilesystem: true
+    image:
+      repository: boicotaz/application-repository-operator
+      tag: latest
+    resources:
+      limits:
+        cpu: 500m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 64Mi
+  nodeSelector: {}
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  replicas: 1
+  tolerations: []
+  topologySpreadConstraints: []
+github:
+  # GITHUB_TOKEN is read from the argocd-write-token Secret, synced into the
+  # default namespace by helm-charts/platform's ExternalSecret from AWS SM
+  # path taskapp/platform/argocd-write-token. Not chart-managed.
+  # repoOwner/repoName/repoBranch override the operator's built-in defaults
+  # (entr0pian/argocd/main). Leave empty to use those defaults.
+  repoOwner: ""
+  repoName: ""
+  repoBranch: ""
+kubernetesClusterDomain: cluster.local
+metricsService:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  automount: true
+  create: true
+  name: ""

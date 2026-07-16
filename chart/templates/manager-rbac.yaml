@@ -1,0 +1,48 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "application-repository-operator.fullname" . }}-manager-role
+  labels:
+  {{- include "application-repository-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - platform.taskapp.io
+  resources:
+  - applicationrepositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - platform.taskapp.io
+  resources:
+  - applicationrepositories/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - platform.taskapp.io
+  resources:
+  - applicationrepositories/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "application-repository-operator.fullname" . }}-manager-rolebinding
+  labels:
+  {{- include "application-repository-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: '{{ include "application-repository-operator.fullname" . }}-manager-role'
+subjects:
+- kind: ServiceAccount
+  name: '{{ include "application-repository-operator.serviceAccountName" . }}'
+  namespace: '{{ .Release.Namespace }}'
