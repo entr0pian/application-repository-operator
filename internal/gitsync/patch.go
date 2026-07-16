@@ -52,7 +52,7 @@ func PatchYAML(ctx context.Context, c githubapi.Client, path, commitMessage stri
 	backoff := initialBackoff
 	var lastErr error
 
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for attempt := range maxAttempts {
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():

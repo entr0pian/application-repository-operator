@@ -40,7 +40,7 @@ const namespace = "application-repository-operator-system"
 const serviceAccountName = "application-repository-operator-controller-manager"
 
 // metricsServiceName is the name of the metrics service of the project
-const metricsServiceName = "application-repository-operator-controller-manager-metrics-service"
+const metricsServiceName = "application-repository-operator-metrics-service"
 
 // metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data
 const metricsRoleBindingName = "application-repository-operator-metrics-binding"

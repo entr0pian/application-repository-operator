@@ -96,7 +96,7 @@ func (c *RESTClient) GetFile(ctx context.Context, path string) ([]byte, string, 
 	if err != nil {
 		return nil, "", fmt.Errorf("githubapi: get %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -161,7 +161,7 @@ func (c *RESTClient) UpdateFile(ctx context.Context, path string, content []byte
 	if err != nil {
 		return "", fmt.Errorf("githubapi: update %s: %w", path, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
