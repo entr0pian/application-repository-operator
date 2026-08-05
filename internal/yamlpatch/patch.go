@@ -92,6 +92,28 @@ func (d *Document) SetBool(value bool, path ...string) bool {
 	return true
 }
 
+// Delete removes the key at path if present, returning true if it was
+// present and removed (false if already absent, or if any parent segment
+// of path doesn't exist — same changed/no-op signal SetString/SetBool
+// already return).
+func (d *Document) Delete(path ...string) bool {
+	if len(path) == 0 {
+		return false
+	}
+	parent := d.find(d.root(), path[:len(path)-1], false)
+	if parent == nil || parent.Kind != yaml.MappingNode {
+		return false
+	}
+	key := path[len(path)-1]
+	for i := 0; i+1 < len(parent.Content); i += 2 {
+		if parent.Content[i].Value == key {
+			parent.Content = append(parent.Content[:i], parent.Content[i+2:]...)
+			return true
+		}
+	}
+	return false
+}
+
 // find walks path through nested mapping nodes starting at m. When create
 // is true, missing keys (and non-mapping nodes that need to become mapping
 // nodes to hold the next path segment) are created/converted in place.

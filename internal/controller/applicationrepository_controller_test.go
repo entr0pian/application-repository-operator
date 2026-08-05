@@ -119,4 +119,76 @@ var _ = Describe("ApplicationRepository Controller", func() {
 			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
+
+	Context("imageTag handling", func() {
+		ctx := context.Background()
+
+		// cleanup deletes resource and drives the reconciler through
+		// handleDeletion so the finalizer is actually removed and the object
+		// is gone before the next spec reuses a name, instead of leaving a
+		// terminating zombie that would fail a later Create.
+		cleanup := func(reconciler *ApplicationRepositoryReconciler, name types.NamespacedName) {
+			resource := &platformv1alpha1.ApplicationRepository{}
+			Expect(k8sClient.Get(ctx, name, resource)).To(Succeed())
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+			_, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		It("never writes an imageTag key when the field is left unset", func() {
+			name := types.NamespacedName{Name: "imagetag-unset", Namespace: "default"}
+			resource := &platformv1alpha1.ApplicationRepository{
+				ObjectMeta: metav1.ObjectMeta{Name: name.Name, Namespace: name.Namespace},
+				Spec: platformv1alpha1.ApplicationRepositorySpec{
+					RepoURL:  "https://github.com/entr0pian/example.git",
+					Clusters: []platformv1alpha1.ClusterTarget{{Name: "dev"}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			gh := newFakeGitHubClient()
+			reconciler := &ApplicationRepositoryReconciler{Client: k8sClient, Scheme: k8sClient.Scheme(), GitHub: gh}
+			defer cleanup(reconciler, name)
+
+			// First reconcile only adds the finalizer and returns early; the
+			// second one is the reconcile that actually patches taskapp-argocd.
+			_, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+			_, err = reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(gh.files["apps/values-dev.yaml"]).NotTo(BeNil())
+			Expect(string(gh.files["apps/values-dev.yaml"])).NotTo(ContainSubstring("imageTag"))
+		})
+
+		It("writes and then removes imageTag as the field is set and then cleared", func() {
+			name := types.NamespacedName{Name: "imagetag-set-then-cleared", Namespace: "default"}
+			resource := &platformv1alpha1.ApplicationRepository{
+				ObjectMeta: metav1.ObjectMeta{Name: name.Name, Namespace: name.Namespace},
+				Spec: platformv1alpha1.ApplicationRepositorySpec{
+					RepoURL:  "https://github.com/entr0pian/example.git",
+					Clusters: []platformv1alpha1.ClusterTarget{{Name: "dev", ImageTag: "abc123"}},
+				},
+			}
+			Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+			gh := newFakeGitHubClient()
+			reconciler := &ApplicationRepositoryReconciler{Client: k8sClient, Scheme: k8sClient.Scheme(), GitHub: gh}
+			defer cleanup(reconciler, name)
+
+			_, err := reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+			_, err = reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(gh.files["apps/values-dev.yaml"])).To(ContainSubstring("imageTag: abc123"))
+
+			Expect(k8sClient.Get(ctx, name, resource)).To(Succeed())
+			resource.Spec.Clusters = []platformv1alpha1.ClusterTarget{{Name: "dev"}}
+			Expect(k8sClient.Update(ctx, resource)).To(Succeed())
+
+			_, err = reconciler.Reconcile(ctx, reconcile.Request{NamespacedName: name})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(gh.files["apps/values-dev.yaml"])).NotTo(ContainSubstring("imageTag"))
+		})
+	})
 })

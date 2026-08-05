@@ -190,10 +190,16 @@ func (r *ApplicationRepositoryReconciler) reconcileClusters(ctx context.Context,
 			func(doc *yamlpatch.Document) bool {
 				changedEnabled := doc.SetBool(enabled, "repositories", name, "enabled")
 				changedNamespace := false
+				changedImageTag := false
 				if enabled {
 					changedNamespace = doc.SetString(target.Namespace, "repositories", name, "namespace")
+					if target.ImageTag != "" {
+						changedImageTag = doc.SetString(target.ImageTag, "repositories", name, "imageTag")
+					} else {
+						changedImageTag = doc.Delete("repositories", name, "imageTag")
+					}
 				}
-				return changedEnabled || changedNamespace
+				return changedEnabled || changedNamespace || changedImageTag
 			},
 		)
 		if err != nil {

@@ -63,6 +63,12 @@ spec:
                   description: ClusterTarget describes one cluster/environment this
                     repository is delivered to.
                   properties:
+                    imageTag:
+                      description: |-
+                        imageTag pins the image tag deployed to this cluster, forwarded as an
+                        image.tag Helm parameter to the onboarded repo's chart. Clearing it
+                        (leaving it empty) reverts this cluster to the chart's own default tag.
+                      type: string
                     name:
                       description: |-
                         name is the target environment (e.g. "dev", "prod"). It selects which

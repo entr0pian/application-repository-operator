@@ -34,6 +34,12 @@ type ClusterTarget struct {
 	// +kubebuilder:default=default
 	// +optional
 	Namespace string `json:"namespace,omitempty"`
+
+	// imageTag pins the image tag deployed to this cluster, forwarded as an
+	// image.tag Helm parameter to the onboarded repo's chart. Clearing it
+	// (leaving it empty) reverts this cluster to the chart's own default tag.
+	// +optional
+	ImageTag string `json:"imageTag,omitempty"`
 }
 
 // ApplicationRepositorySpec defines the desired state of ApplicationRepository
