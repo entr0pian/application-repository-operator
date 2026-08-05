@@ -6,4 +6,9 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: applicationrepository-sample
 spec:
-  # TODO(user): Add fields here
+  repoURL: https://github.com/entr0pian/example.git
+  targetRevision: main
+  chartPath: chart
+  clusters:
+    - name: dev
+      namespace: default
