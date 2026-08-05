@@ -63,6 +63,12 @@ spec:
         args:
           - --leader-elect
           - --health-probe-bind-address=:8081
+        env:
+          - name: GITHUB_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: github-token
+                key: token
         image: controller:latest
         name: manager
         ports:

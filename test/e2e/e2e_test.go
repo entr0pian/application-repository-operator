@@ -63,6 +63,12 @@ var _ = Describe("Manager", Ordered, func() {
 		_, err = utils.Run(cmd)
 		Expect(err).NotTo(HaveOccurred(), "Failed to label namespace with restricted policy")
 
+		By("creating a dummy GITHUB_TOKEN secret for the manager")
+		cmd = exec.Command("kubectl", "create", "secret", "generic", "github-token",
+			"--from-literal=token=dummy-e2e-token", "-n", namespace)
+		_, err = utils.Run(cmd)
+		Expect(err).NotTo(HaveOccurred(), "Failed to create github-token secret")
+
 		By("installing CRDs")
 		cmd = exec.Command("make", "install")
 		_, err = utils.Run(cmd)
