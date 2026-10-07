@@ -1,5 +1,14 @@
 # application-repository-operator
 
+> **Retired. Not deployed anywhere.** This was the platform's first onboarding
+> mechanism: an `ApplicationRepository` resource that this operator turned into
+> commits against the Argo CD repository. It was replaced by plain files in
+> [application-repositories](https://github.com/entr0pian/application-repositories),
+> read directly by Argo CD ApplicationSets, and by
+> [release-operator](https://github.com/entr0pian/release-operator), which writes
+> deployments from a `Release`. The paths below (`crs/`, `apps/values-<cluster>.yaml`) no longer exist.
+> The code is kept for reference.
+
 Kubernetes operator that lets a dev lead onboard automated multi-cluster Argo
 CD delivery for a repo by opening one PR with a small custom resource,
 instead of the platform team hand-writing an Argo CD `Application` per repo
